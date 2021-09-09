@@ -1,65 +1,74 @@
-import torch
-from models.model import MyCNN
-from models.model import ExampleCNN
-from datasets.dataloader import make_test_dataloader
-
 import os
 from tqdm import tqdm
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, random_split
+from torchvision.models import vgg19
+from matplotlib import pyplot as plt
 
-def test(model_name, device, base_path, save_path):
-    test_data_path = os.path.join(base_path, "data", "test")
-    weight_path = os.path.join(save_path, "weight.pth")
+from dataset import DogDataset
+from models.model import VGG19_1, VGG19_2, MyCNN, Densenet, ResNet
+from utils import argument_setting
 
-    # load model and use weights we saved before
-    if model_name == "ExampleCNN":
-        model = ExampleCNN()
-    else:
+
+def test(args):
+
+    submit_csv = pd.read_csv(args.submit_csv, header=0)
+    outputs_list = []
+
+    # dataset
+    full_set = DogDataset(args.test_path, submit_csv)
+
+    # choose training device
+    device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
+
+    # load model
+    if args.model == "VGG19_1":
+        model = VGG19_1()
+    elif args.model == "VGG19_2":
+        model = VGG19_2()
+    elif args.model == "MyCNN":
         model = MyCNN()
+    elif args.model == "ResNet":
+        model = ResNet()
+    elif args.model == "Densenet":
+        model = Densenet()
+    else:
+        model = vgg19(pretrained=True)
 
-    model.load_state_dict(torch.load(weight_path))
     model = model.to(device)
+    model.load_state_dict(torch.load(os.path.join(args.weights_path, 'model_weights.pth')))
 
-    # make dataloader for test data
-    test_loader = make_test_dataloader(test_data_path, 2)
+    # set dataloader
+    dataloader = DataLoader(
+        full_set,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+        pin_memory=False
+    )
 
-    predict_correct = 0
+    # start to evaluate
     model.eval()
-    with torch.no_grad():
-        for data, target in tqdm(test_loader, desc="Testing"):
-            data, target = data.to(device), target.to(device)
+    with tqdm(enumerate(dataloader), total=len(dataloader), desc=f'Evaluation') as t, torch.set_grad_enabled(False):
+        for _, inputs in t:
+            inputs = inputs.to(device)
 
-            output = model(data)
-            predict_correct += (output.data.max(1)[1] == target.data).sum()
+            # forward
+            outputs = model(inputs)
+            outputs = nn.functional.softmax(outputs, dim=1)
+            outputs = outputs.data.cpu().numpy()[:, 1].tolist()
+            outputs_list = outputs_list + outputs
 
-        accuracy = 100. * predict_correct / len(test_loader.dataset)
-    print(f'Test accuracy: {accuracy:.4f}%')
+    print("\nFinished Evaluating")
 
-    return accuracy.item()
+    submit_csv['label'] = outputs_list
+    submit_csv.to_csv(os.path.join(args.weights_path, 'answer.csv'), index=False)
 
 if __name__ == '__main__':
-    cuda_device = 0
-    batch_size =32
-    epochs = 40
-    learning_rate = 0.01
-    model_name = "ExampleCNN"
 
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    device = torch.device(f'cuda:{cuda_device}' if torch.cuda.is_available() else 'cpu')
+    args = argument_setting()
 
-    state_name = f"{batch_size}_{epochs}_{learning_rate}"
-    save_name = "train_result"
-
-    save_path = os.path.join(base_path, save_name, state_name)
-
-    if not os.path.exists(os.path.join(base_path, save_name)):
-        os.mkdir(os.path.join(base_path, save_name))
-
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
-
-    test_accuracy = test(
-        model_name=model_name,
-        device=device,
-        base_path=base_path,
-        save_path=save_path
-    )
+    test(args)

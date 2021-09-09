@@ -2,15 +2,17 @@ import os
 import time
 from tqdm import tqdm
 import pandas as pd
-from argparse import ArgumentParser
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 from torchvision.models import vgg19
-from torchsummary import summary
+# from torchsummary import summary
 from matplotlib import pyplot as plt
 
-from dataset import CatDataset, cross_validation
+from dataset import CatDataset
+from models.model import VGG19_1, VGG19_2, MyCNN, Densenet, ResNet
+from utils import argument_setting, cross_validation
+
 
 def train(args):
 
@@ -30,23 +32,22 @@ def train(args):
     # build hold out CV
     # train_set, valid_set = cross_validation(full_set, args.holdout_p)
 
-    # load model
+    # choose training device
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
-    if args.model == "VGG":
-        model = vgg19(pretrained=True)
+    # load model
+    if args.model == "VGG19_1":
+        model = VGG19_1()
+    elif args.model == "VGG19_2":
+        model = VGG19_2()
+    elif args.model == "MyCNN":
+        model = MyCNN()
+    elif args.model == "ResNet":
+        model = ResNet()
+    elif args.model == "Densenet":
+        model = Densenet()
     else:
         model = vgg19(pretrained=True)
-
-    # 把參數凍結
-    for param in model.parameters():
-        param.requires_grad = False
-
-    # Replace the last fully-connected layer
-    # Parameters of newly constructed modules have requires_grad=True by default
-    if args.model == "VGG19":
-        model.classifier[3] = nn.Linear(4096, 4096)
-        model.classifier[6] = nn.Linear(4096, 2)
 
     params_to_update = []
     for _,param in model.named_parameters():
@@ -71,19 +72,21 @@ def train(args):
     best = 100
 
     # set dataloader
-    dataloader['train'] = DataLoader(train_set,
-                              batch_size=args.batch_size,
-                              shuffle=True,
-                              num_workers=args.num_workers,
-                            #   sampler=train_sampler,
-                              pin_memory=False,)
+    dataloader['train'] = DataLoader(
+        train_set,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
+        pin_memory=False
+    )
 
-    dataloader['valid'] = DataLoader(valid_set,
-                              batch_size=args.batch_size,
-                              shuffle=False,
-                              num_workers=args.num_workers,
-                            #   sampler=valid_sampler,
-                              pin_memory=False,)
+    dataloader['valid'] = DataLoader(
+        valid_set,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+        pin_memory=False
+    )
 
     # check output path exist
     if not os.path.exists(args.output_path):
@@ -98,7 +101,10 @@ def train(args):
             epoch_loss = 0.0
             correct = 0
 
-            with tqdm(enumerate(dataloader[phase]), desc=f'{epoch}/{args.epochs}, {phase}') as t, torch.set_grad_enabled(phase=='train'):
+            with tqdm(enumerate(dataloader[phase]),
+                        total=len(dataloader[phase]),
+                        desc=f'{epoch}/{args.epochs}, {phase}') as t, \
+                    torch.set_grad_enabled(phase=='train'):
                 for _, data in t:
                     inputs, targets = data[0].to(device), data[1].to(device)
 
@@ -148,25 +154,6 @@ def train(args):
     }).plot()
     plt.xlabel("Epoch"),plt.ylabel("Accuracy")
     plt.savefig(os.path.join(save_path, "Training_accuracy.jpg"))
-
-def argument_setting():
-
-    parser = ArgumentParser()
-
-    parser.add_argument('--cuda', type=int, default=0)
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--optim', type=str, default='SGD')
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--num_workers', type=int, default=8)
-    parser.add_argument('--model', type=str, default='VGG19')
-    parser.add_argument('--holdout_p', type=float, default=0.8)
-    parser.add_argument('--output_path', type=str, default='./output/')
-    parser.add_argument('--train_path', type=str, default='./data/train/')
-    parser.add_argument('--test_path', type=str, default='./data/test1/')
-
-    return parser.parse_args()
 
 if __name__ == '__main__':
 
