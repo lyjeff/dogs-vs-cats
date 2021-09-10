@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
-import numpy
 from torchvision.models import vgg19, resnet50, densenet161
-from torchsummary import summary
+# from torchsummary import summary
 
-def VGG19_1():
+def VGG19():
     model = vgg19(pretrained=True)
 
     # 把參數凍結
@@ -130,6 +129,26 @@ class MyCNN(nn.Module):
         # =================================================================================================== #
 
         return out
+
+
+def model_builder(model_name):
+
+    # load model
+    if model_name == "VGG19":
+        model = VGG19()
+    elif model_name == "VGG19_2":
+        model = VGG19_2()
+    elif model_name == "MyCNN":
+        model = MyCNN()
+    elif model_name == "ResNet":
+        model = ResNet()
+    elif model_name == "Densenet":
+        model = Densenet()
+    else:
+        model = VGG19()
+
+    return model
+
 
 if __name__ == '__main__':
     # model = Densenet()

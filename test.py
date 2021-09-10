@@ -1,16 +1,13 @@
 import os
 from tqdm import tqdm
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
-from torchvision.models import vgg19
-from matplotlib import pyplot as plt
+from torch.utils.data import DataLoader
 
 from dataset import DogDataset
-from models.model import VGG19_1, VGG19_2, MyCNN, Densenet, ResNet
-from utils import argument_setting
+from models.model import model_builder
+from utils import argument_setting, threshold_function
 
 
 def test(args):
@@ -25,19 +22,7 @@ def test(args):
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
     # load model
-    if args.model == "VGG19_1":
-        model = VGG19_1()
-    elif args.model == "VGG19_2":
-        model = VGG19_2()
-    elif args.model == "MyCNN":
-        model = MyCNN()
-    elif args.model == "ResNet":
-        model = ResNet()
-    elif args.model == "Densenet":
-        model = Densenet()
-    else:
-        model = vgg19(pretrained=True)
-
+    model = model_builder(args.model)
     model = model.to(device)
     model.load_state_dict(torch.load(os.path.join(args.weights_path, 'model_weights.pth')))
 
@@ -59,13 +44,19 @@ def test(args):
             # forward
             outputs = model(inputs)
             outputs = nn.functional.softmax(outputs, dim=1)
-            outputs = outputs.data.cpu().numpy()[:, 1].tolist()
-            outputs_list = outputs_list + outputs
+            outputs = outputs[:, 1]
 
-    print("\nFinished Evaluating")
+            # get threshold values
+            if args.threshold != None:
+                outputs = threshold_function(outputs, args.threshold, device)
+
+            outputs = outputs.data.cpu().numpy().tolist()
+            outputs_list = outputs_list + outputs
 
     submit_csv['label'] = outputs_list
     submit_csv.to_csv(os.path.join(args.weights_path, 'answer.csv'), index=False)
+
+    print("\nFinished Evaluating\n")
 
 if __name__ == '__main__':
 

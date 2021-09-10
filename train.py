@@ -2,16 +2,18 @@ import os
 import time
 from tqdm import tqdm
 import pandas as pd
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from torchvision.models import vgg19
+from torch.optim.lr_scheduler import ExponentialLR
 # from torchsummary import summary
+
 from matplotlib import pyplot as plt
 
 from dataset import CatDataset
-from models.model import VGG19_1, VGG19_2, MyCNN, Densenet, ResNet
-from utils import argument_setting, cross_validation
+from models.model import model_builder
+from utils import argument_setting, threshold_function, cross_validation
 
 
 def train(args):
@@ -21,11 +23,12 @@ def train(args):
     run_time = time.strftime("%Y_%m_%d_%H_%M_%S", t)
     state_name = f"{args.model}_{args.optim}_{args.epochs}_{args.lr}_{args.batch_size}_{run_time}"
     save_path = os.path.join(args.output_path, state_name)
+    args.weights_path = save_path
 
     # dataset
     full_set = CatDataset(args.train_path)
 
-    # use torch random_split to create the validation dataset
+    # use torch.random_split to create the validation dataset
     lengths = [int(round(len(full_set) * args.holdout_p)), int(round(len(full_set) * (1 - args.holdout_p)))]
     train_set, valid_set = random_split(full_set, lengths)
 
@@ -36,31 +39,23 @@ def train(args):
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
     # load model
-    if args.model == "VGG19_1":
-        model = VGG19_1()
-    elif args.model == "VGG19_2":
-        model = VGG19_2()
-    elif args.model == "MyCNN":
-        model = MyCNN()
-    elif args.model == "ResNet":
-        model = ResNet()
-    elif args.model == "Densenet":
-        model = Densenet()
-    else:
-        model = vgg19(pretrained=True)
+    model = model_builder(args.model)
+    model = model.to(device)
 
-    params_to_update = []
+    # 取得要更新的參數
+    parameters = []
     for _,param in model.named_parameters():
         if param.requires_grad == True:
-            params_to_update.append(param)
-
-    model = model.to(device)
+            parameters.append(param)
 
     # set optimizer
     if args.optim == "Adam":
-        optimizer = torch.optim.Adam(params_to_update, lr=args.lr)
+        optimizer = torch.optim.Adam(parameters, lr=args.lr)
     else:
-        optimizer = torch.optim.SGD(params_to_update, lr=args.lr, momentum=args.momentum)
+        optimizer = torch.optim.SGD(parameters, lr=args.lr, momentum=args.momentum)
+
+    if args.schedule is True:
+        scheduler = ExponentialLR(optimizer, args.gamma)
 
     # set loss function
     criterion = nn.BCELoss()
@@ -101,10 +96,11 @@ def train(args):
             epoch_loss = 0.0
             correct = 0
 
-            with tqdm(enumerate(dataloader[phase]),
-                        total=len(dataloader[phase]),
-                        desc=f'{epoch}/{args.epochs}, {phase}') as t, \
-                    torch.set_grad_enabled(phase=='train'):
+            with tqdm(
+                enumerate(dataloader[phase]),
+                total=len(dataloader[phase]),
+                desc=f'{epoch}/{args.epochs}, {phase}'
+            ) as t, torch.set_grad_enabled(phase=='train'):
                 for _, data in t:
                     inputs, targets = data[0].to(device), data[1].to(device)
 
@@ -113,7 +109,14 @@ def train(args):
                     outputs = nn.functional.softmax(outputs, dim=1)
                     _, preds = torch.max(outputs.data, 1)
                     targets = targets.to(torch.float32)
-                    loss = criterion(outputs[:,1], targets)
+                    outputs = outputs[:, 1]
+
+                    # get threshold values
+                    if args.threshold != None:
+                        outputs = threshold_function(outputs, args.threshold, device)
+
+                    # count loss
+                    loss = criterion(outputs, targets)
 
                     # backward
                     if phase == 'train':
@@ -129,6 +132,10 @@ def train(args):
             accuracy = float(correct) / len(dataloader[phase].dataset)
             accuracy_list[phase].append(accuracy)
 
+            # learning rate scheduler
+            if phase == 'train':
+                scheduler.step()
+
             if phase == 'valid' and epoch_loss < best:
                 best = epoch_loss
                 torch.save(model.state_dict(), os.path.join(save_path, 'model_weights.pth'))
@@ -137,9 +144,7 @@ def train(args):
         print(f"Train Loss: {loss_list['train'][-1]:.4f}, Validation Loss: {loss_list['valid'][-1]:.4f}")
         print(f"Train Accuracy: {accuracy_list['train'][-1]:.4f}, Validation Accuracy: {accuracy_list['valid'][-1]:.4f}\n")
 
-    print("\nFinished Training")
-
-     # plot the loss curve for training and validation
+    # plot the loss curve for training and validation
     pd.DataFrame({
         "train-loss": loss_list['train'],
         "valid-loss": loss_list['valid']
@@ -154,6 +159,8 @@ def train(args):
     }).plot()
     plt.xlabel("Epoch"),plt.ylabel("Accuracy")
     plt.savefig(os.path.join(save_path, "Training_accuracy.jpg"))
+
+    print("\nFinished Training\n")
 
 if __name__ == '__main__':
 

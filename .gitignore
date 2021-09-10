@@ -2,6 +2,7 @@
 data/
 output*/
 *.out
+answer.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
