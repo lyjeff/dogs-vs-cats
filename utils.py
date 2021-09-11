@@ -29,6 +29,7 @@ def argument_setting(inhert=False):
         metavar='VGG19, VGG19_2, ResNet, Densenet, MyCNN',
         default='VGG19'
     )
+    parser.add_argument('--train-all', action="store_true", default=False)
 
     # optimizer argument
     parser.add_argument('--optim', type=str, default='SGD')
@@ -36,7 +37,7 @@ def argument_setting(inhert=False):
     parser.add_argument('--momentum', type=float, default=0.9)
 
     # scheduler argument
-    parser.add_argument('--scheduler', action="store_True", default=False)
+    parser.add_argument('--scheduler', action="store_true", default=False)
     parser.add_argument('--gamma', type=float, default=0.9)
 
     # post-processing argument

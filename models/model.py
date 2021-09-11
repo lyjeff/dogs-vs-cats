@@ -3,12 +3,13 @@ import torch.nn as nn
 from torchvision.models import vgg19, resnet50, densenet161
 # from torchsummary import summary
 
-def VGG19():
+def VGG19(all=False):
     model = vgg19(pretrained=True)
 
     # 把參數凍結
-    for param in model.parameters():
-        param.requires_grad = False
+    if all is True:
+        for param in model.parameters():
+            param.requires_grad = False
 
     # Replace the last fully-connected layer
     # Parameters of newly constructed modules have requires_grad=True by default
@@ -17,12 +18,13 @@ def VGG19():
     return model
 
 
-def VGG19_2():
+def VGG19_2(all=False):
     model = vgg19(pretrained=True)
 
     # 把參數凍結
-    for param in model.parameters():
-        param.requires_grad = False
+    if all is True:
+        for param in model.parameters():
+            param.requires_grad = False
 
     model.classifier[3] = nn.Linear(4096, 4096)
     model.classifier[6] = nn.Linear(4096, 2)
@@ -30,11 +32,13 @@ def VGG19_2():
     return model
 
 
-def ResNet():
+def ResNet(all=False):
     model = resnet50(pretrained=True)
 
-    for param in model.parameters():
-        param.requires_grad = False
+    # 把參數凍結
+    if all is True:
+        for param in model.parameters():
+            param.requires_grad = False
 
     # 修改全連線層的輸出
     model.fc = nn.Linear(2048, 2)
@@ -42,11 +46,13 @@ def ResNet():
     return model
 
 
-def Densenet():
+def Densenet(all=False):
     model = densenet161()
 
-    for param in model.parameters():
-        param.requires_grad = False
+    # 把參數凍結
+    if all is True:
+        for param in model.parameters():
+            param.requires_grad = False
 
     # 修改全連線層的輸出
     model.classifier = nn.Linear(2208, 2)
@@ -131,21 +137,21 @@ class MyCNN(nn.Module):
         return out
 
 
-def model_builder(model_name):
+def model_builder(model_name, train_all):
 
     # load model
     if model_name == "VGG19":
-        model = VGG19()
+        model = VGG19(train_all)
     elif model_name == "VGG19_2":
-        model = VGG19_2()
+        model = VGG19_2(train_all)
     elif model_name == "MyCNN":
         model = MyCNN()
     elif model_name == "ResNet":
-        model = ResNet()
+        model = ResNet(train_all)
     elif model_name == "Densenet":
-        model = Densenet()
+        model = Densenet(train_all)
     else:
-        model = VGG19()
+        model = VGG19(train_all)
 
     return model
 

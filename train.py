@@ -39,7 +39,7 @@ def train(args):
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
     # load model
-    model = model_builder(args.model)
+    model = model_builder(args.model, args.train_all)
     model = model.to(device)
 
     # 取得要更新的參數
@@ -54,8 +54,10 @@ def train(args):
     else:
         optimizer = torch.optim.SGD(parameters, lr=args.lr, momentum=args.momentum)
 
-    if args.schedule is True:
+    if args.scheduler is True:
         scheduler = ExponentialLR(optimizer, args.gamma)
+    else:
+        scheduler = None
 
     # set loss function
     criterion = nn.BCELoss()
@@ -133,7 +135,7 @@ def train(args):
             accuracy_list[phase].append(accuracy)
 
             # learning rate scheduler
-            if phase == 'train':
+            if phase == 'train' and args.scheduler is True:
                 scheduler.step()
 
             if phase == 'valid' and epoch_loss < best:
