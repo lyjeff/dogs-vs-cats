@@ -1,7 +1,7 @@
 import os
 import subprocess
 from train import train
-from test import test
+from eval import eval
 from utils import argument_setting
 
 if __name__ == '__main__':
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     train(args)
-    test(args)
+    eval(args)
 
     print(f"Save output at {args.weights_path}")
 

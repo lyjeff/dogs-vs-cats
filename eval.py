@@ -10,7 +10,7 @@ from models.model import model_builder
 from utils import argument_setting, threshold_function
 
 
-def test(args):
+def eval(args):
 
     submit_csv = pd.read_csv(args.submit_csv, header=0)
     outputs_list = []
@@ -62,4 +62,4 @@ if __name__ == '__main__':
 
     args = argument_setting()
 
-    test(args)
+    eval(args)

@@ -137,7 +137,7 @@ class MyCNN(nn.Module):
         return out
 
 
-def model_builder(model_name, train_all):
+def model_builder(model_name, train_all=False):
 
     # load model
     if model_name == "VGG19":
