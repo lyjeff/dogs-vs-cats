@@ -54,6 +54,7 @@ def train(args):
     else:
         optimizer = torch.optim.SGD(parameters, lr=args.lr, momentum=args.momentum)
 
+    # set scheduler
     if args.scheduler is True:
         scheduler = ExponentialLR(optimizer, args.gamma)
     else:
@@ -90,6 +91,7 @@ def train(args):
         os.mkdir(args.output_path)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
+    print(f"Saving output file and model parameters at {save_path}")
 
     # start to train
     for epoch in range(args.epochs):
@@ -129,22 +131,25 @@ def train(args):
                     epoch_loss += loss.item() * inputs.data.size(0)
                     correct += torch.sum(preds == targets.data)
 
+                    # lr scheduler every iteration
+                    if args.iteration is True and args.scheduler is True and phase == 'train':
+                            scheduler.step()
+
             epoch_loss /= len(dataloader[phase].dataset)
             loss_list[phase].append(epoch_loss)
             accuracy = float(correct) / len(dataloader[phase].dataset)
             accuracy_list[phase].append(accuracy)
 
             # learning rate scheduler
-            if phase == 'train' and args.scheduler is True:
+            if args.scheduler is True and args.iteration is False and phase == 'train':
                 scheduler.step()
 
             if phase == 'valid' and epoch_loss < best:
                 best = epoch_loss
                 torch.save(model.state_dict(), os.path.join(save_path, 'model_weights.pth'))
 
-        print(f"\nEpoch {epoch}")
-        print(f"Train Loss: {loss_list['train'][-1]:.4f}, Validation Loss: {loss_list['valid'][-1]:.4f}")
-        print(f"Train Accuracy: {accuracy_list['train'][-1]:.4f}, Validation Accuracy: {accuracy_list['valid'][-1]:.4f}\n")
+        print(f"Epoch {epoch}\tTrain Loss: {loss_list['train'][-1]:.4f}, Validation Loss: {loss_list['valid'][-1]:.4f}")
+        print(f"Epoch {epoch}\tTrain Accuracy: {accuracy_list['train'][-1]:.4f}, Validation Accuracy: {accuracy_list['valid'][-1]:.4f}\n")
 
     # plot the loss curve for training and validation
     pd.DataFrame({
@@ -162,10 +167,11 @@ def train(args):
     plt.xlabel("Epoch"),plt.ylabel("Accuracy")
     plt.savefig(os.path.join(save_path, "Training_accuracy.jpg"))
 
+    print(f"Best Validation Loss: {best}")
     print("\nFinished Training\n")
+
 
 if __name__ == '__main__':
 
     args = argument_setting()
-
     train(args)

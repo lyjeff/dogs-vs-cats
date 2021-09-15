@@ -1,4 +1,5 @@
 import torch
+import cv2
 import numpy as np
 from argparse import ArgumentParser
 from torch.utils.data.sampler import SubsetRandomSampler
@@ -19,16 +20,18 @@ def argument_setting(inhert=False):
 
     # dataset argument
     parser.add_argument('--holdout-p', type=float, default=0.8)
+    parser.add_argument('--num-workers', type=int, default=8)
 
     # training argument
-    parser.add_argument('--batch-size', type=int, default=32)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--batch-size', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument(
         '--model', type=str,
         choices=['VGG19', 'VGG19_2', 'ResNet', 'MyCNN', 'Densenet'],
         metavar='VGG19, VGG19_2, ResNet, Densenet, MyCNN',
         default='VGG19'
     )
+    parser.add_argument('--iteration', action="store_true", default=False)
     parser.add_argument('--train-all', action="store_true", default=False)
 
     # optimizer argument
@@ -38,10 +41,9 @@ def argument_setting(inhert=False):
 
     # scheduler argument
     parser.add_argument('--scheduler', action="store_true", default=False)
-    parser.add_argument('--gamma', type=float, default=0.9)
+    parser.add_argument('--gamma', type=float, default=0.99985)
 
     # post-processing argument
-    parser.add_argument('--num-workers', type=int, default=8)
     parser.add_argument(
         '--threshold',
         type=float,
@@ -86,3 +88,16 @@ def threshold_function(data, threshold, device='cpu'):
     data = torch.where(data < (1-threshold), torch.tensor(0.0, dtype=data.dtype).to(device), data)
 
     return data
+
+
+def adaptive_threshold(img):
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    bilateral = cv2.bilateralFilter(gray_img, 11, 75, 75)
+    blur = cv2.GaussianBlur(bilateral, (5, 5), 1)
+    adaptive_threshold = cv2.adaptiveThreshold(
+        blur, 255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY_INV,
+        11, 2
+    )
+    return adaptive_threshold

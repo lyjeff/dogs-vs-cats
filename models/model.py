@@ -26,8 +26,8 @@ def VGG19_2(all=False):
         for param in model.parameters():
             param.requires_grad = False
 
-    model.classifier[3] = nn.Linear(4096, 4096)
-    model.classifier[6] = nn.Linear(4096, 2)
+    model.classifier[3] = nn.Linear(4096, 1024)
+    model.classifier[6] = nn.Linear(1024, 2)
 
     return model
 

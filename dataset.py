@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 from glob import glob
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset
@@ -9,7 +8,9 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 # image transform for train and test
 data_transforms = transforms.Compose([
     transforms.Resize((224,224)),
+    # transforms.Grayscale(3),
     transforms.ToTensor(),
+    # transforms.GaussianBlur((5, 5), 1),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
