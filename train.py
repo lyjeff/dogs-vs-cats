@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from matplotlib import pyplot as plt
 
 from dataset import CatDataset
-from models.model import model_builder
+from models.model import Model
 from utils import argument_setting, threshold_function, cross_validation
 
 
@@ -37,7 +37,7 @@ def train(args):
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
     # load model
-    model = model_builder(args.model, args.train_all)
+    model = Model().model_builder(args.model, args.train_all)
     model = model.to(device)
 
     # 取得要更新的參數

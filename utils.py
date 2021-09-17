@@ -4,6 +4,8 @@ import numpy as np
 from argparse import ArgumentParser
 from torch.utils.data.sampler import SubsetRandomSampler
 
+from models.model import Model
+
 
 def argument_setting(inhert=False):
 
@@ -27,8 +29,8 @@ def argument_setting(inhert=False):
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument(
         '--model', type=str,
-        choices=['VGG19', 'VGG19_2', 'ResNet', 'MyCNN', 'Densenet', 'GoogleNet'],
-        metavar='VGG19, VGG19_2, ResNet, Densenet, GoogleNet, MyCNN',
+        choices=Model().get_model_list(),
+        metavar=f'{Model().get_model_list()}',
         default='VGG19'
     )
     parser.add_argument('--iteration', action="store_true", default=False)

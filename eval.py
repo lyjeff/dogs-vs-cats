@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from dataset import DogDataset
-from models.model import model_builder
+from models.model import Model
 from utils import argument_setting, threshold_function
 
 
@@ -22,7 +22,7 @@ def eval(args):
     device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
 
     # load model
-    model = model_builder(args.model)
+    model = Model().model_builder(args.model)
     model = model.to(device)
     model.load_state_dict(torch.load(os.path.join(args.output_path, 'model_weights.pth')))
 
