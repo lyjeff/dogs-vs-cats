@@ -13,7 +13,7 @@ if __name__ == '__main__':
     train(args)
     eval(args)
 
-    print(f"Save output at {args.weights_path}")
+    print(f"Save output at {args.output_path}")
 
     if args.kaggle != None:
         print("Uploading Kaggle...")
@@ -25,7 +25,7 @@ if __name__ == '__main__':
             "-c"
             "dogs-vs-cats-redux-kernels-edition",
             "-f",
-            os.path.join(args.weights_path, "answer.csv"),
+            os.path.join(args.output_path, "answer.csv"),
             "-m",
             args.kaggle
         ])

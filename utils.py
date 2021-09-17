@@ -27,8 +27,8 @@ def argument_setting(inhert=False):
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument(
         '--model', type=str,
-        choices=['VGG19', 'VGG19_2', 'ResNet', 'MyCNN', 'Densenet'],
-        metavar='VGG19, VGG19_2, ResNet, Densenet, MyCNN',
+        choices=['VGG19', 'VGG19_2', 'ResNet', 'MyCNN', 'Densenet', 'GoogleNet'],
+        metavar='VGG19, VGG19_2, ResNet, Densenet, GoogleNet, MyCNN',
         default='VGG19'
     )
     parser.add_argument('--iteration', action="store_true", default=False)
@@ -36,7 +36,7 @@ def argument_setting(inhert=False):
 
     # optimizer argument
     parser.add_argument('--optim', type=str, default='SGD')
-    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--lr', type=float, default=1e-5)
     parser.add_argument('--momentum', type=float, default=0.9)
 
     # scheduler argument
@@ -55,7 +55,6 @@ def argument_setting(inhert=False):
     parser.add_argument('--train-path', type=str, default='./data/train/')
     parser.add_argument('--test-path', type=str, default='./data/test1/')
     parser.add_argument('--submit-csv', type=str, default='./data/sample_submission.csv')
-    parser.add_argument('--weights-path', type=str, default='./output/')
 
     # for the compatiable
     if inhert is True:

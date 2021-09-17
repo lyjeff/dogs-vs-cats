@@ -22,8 +22,6 @@ def train(args):
     t = time.localtime()
     run_time = time.strftime("%Y_%m_%d_%H_%M_%S", t)
     state_name = f"{args.model}_{args.optim}_{args.epochs}_{args.lr}_{args.batch_size}_{run_time}"
-    save_path = os.path.join(args.output_path, state_name)
-    args.weights_path = save_path
 
     # dataset
     full_set = CatDataset(args.train_path)
@@ -87,10 +85,12 @@ def train(args):
     )
 
     # check output path exist
+    save_path = os.path.join(args.output_path, state_name)
     if not os.path.exists(args.output_path):
         os.mkdir(args.output_path)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
+    args.output_path = save_path
     print(f"Saving output file and model parameters at {save_path}")
 
     # start to train

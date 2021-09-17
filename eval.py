@@ -24,7 +24,7 @@ def eval(args):
     # load model
     model = model_builder(args.model)
     model = model.to(device)
-    model.load_state_dict(torch.load(os.path.join(args.weights_path, 'model_weights.pth')))
+    model.load_state_dict(torch.load(os.path.join(args.output_path, 'model_weights.pth')))
 
     # set dataloader
     dataloader = DataLoader(
@@ -54,7 +54,7 @@ def eval(args):
             outputs_list = outputs_list + outputs
 
     submit_csv['label'] = outputs_list
-    submit_csv.to_csv(os.path.join(args.weights_path, 'answer.csv'), index=False)
+    submit_csv.to_csv(os.path.join(args.output_path, 'answer.csv'), index=False)
 
     print("\nFinished Evaluating\n")
 

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torchvision.models import vgg19, resnet50, densenet161
+from torchvision.models import vgg19, resnet50, densenet161, googlenet
 # from torchsummary import summary
 
 def VGG19(all=False):
@@ -58,6 +58,22 @@ def Densenet(all=False):
     model.classifier = nn.Linear(2208, 2)
 
     return model
+
+
+def GoogleNet(all=False):
+    model = googlenet(pretrained=True)
+
+    # 把參數凍結
+    if all is True:
+        for param in model.parameters():
+            param.requires_grad = False
+
+    # Replace the last fully-connected layer
+    # Parameters of newly constructed modules have requires_grad=True by default
+    model.fc = nn.Linear(1024, 2)
+
+    return model
+
 
 
 class MyCNN(nn.Module):
@@ -150,6 +166,8 @@ def model_builder(model_name, train_all=False):
         model = ResNet(train_all)
     elif model_name == "Densenet":
         model = Densenet(train_all)
+    elif model_name == "GoogleNet":
+        model = GoogleNet(train_all)
     else:
         model = VGG19(train_all)
 
@@ -157,7 +175,7 @@ def model_builder(model_name, train_all=False):
 
 
 if __name__ == '__main__':
-    # model = Densenet()
+    model = GoogleNet()
     # summary(model, input=(3,224,224), device="cpu")
-    # print(model)
+    print(model)
     pass
