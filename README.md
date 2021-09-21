@@ -21,16 +21,14 @@ This project is to practice the competition [Dogs vs. Cats Redux: Kernels Editio
 
 Submissions are scored on the log loss:
 
-<img src="https://latex.codecogs.com/gif.latex?\text{LogLoss}=\frac{-1}{n}\sum\limits^n_{i=1}[y_i\log \hat{y}_i+(1-y_i)\log(1-\hat{y}_i)]" />
-
-<img src="https://latex.codecogs.com/gif.latex?\text{LogLoss}=\frac{-1}{n}\sum\limits^n_{i=1}[y_i\log \hat{y}_i+(1-y_i)\log(1-\hat{y}_i)]" />
+<img src="https://i.imgur.com/D2CI0TM.png" />
 
 where
 
-- <img src="https://latex.codecogs.com/gif.latex?n" /> is the number of images in the test set
-- <img src="https://latex.codecogs.com/gif.latex?\hat{y}_i" /> is the predicted probability of the image being a dog
-- <img src="https://latex.codecogs.com/gif.latex?y_i" /> is 1 if the image is a dog, 0 if cat
-- <img src="https://latex.codecogs.com/gif.latex?\log" /> is the natural $base\ e$ logarithm
+- `n` is the number of images in the test set
+- `\hat{y}_i` is the predicted probability of the image being a dog
+- `y_i` is 1 if the image is a dog, 0 if cat
+- `log` is the natural `base e` logarithm
 
 Submission File should have a header and be in the following format:
 
