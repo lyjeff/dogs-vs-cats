@@ -7,7 +7,7 @@ from utils import argument_setting
 if __name__ == '__main__':
 
     parser = argument_setting(inhert=True)
-    parser.add_argument('--kaggle', type=str, metavar='Kaggle_Submission_Message', help="Enter the submission message to upload Kaggle.")
+    parser.add_argument('--kaggle', type=str, metavar='Kaggle_Submission_Message', help="the submission message to upload Kaggle.")
     args = parser.parse_args()
 
     train(args)
