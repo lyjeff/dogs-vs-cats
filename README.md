@@ -17,7 +17,7 @@ Author: Jeff Lin
 
 ## Introduciotn
 
-This project is to practice the competition [Dogs vs. Cats Redux: Kernels Edition](#https://www.kaggle.com/c/dogs-vs-cats-redux-kernels-edition) on Kaggle. The competition is a Dogs vs. Cats classification problem.
+This project is to practice the competition [Dogs vs. Cats Redux: Kernels Edition](https://www.kaggle.com/c/dogs-vs-cats-redux-kernels-edition) on Kaggle. The competition is a Dogs vs. Cats classification problem.
 
 Submissions are scored on the log loss:
 
